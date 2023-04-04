@@ -7,94 +7,105 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract GuarantifyNFTContract is ERC721 {
     using Strings for uint256;
     using Counters for Counters.Counter;
+
+    // Variables for tracking NFT, Seller, and Consumer IDs
     Counters.Counter private _tokenIdCounter;
     Counters.Counter private _sellerIdCounter;
-    Counters.Counter private _consumerIdCounter;
+    Counters.Counter private _ConsumerIdCounter;
 
+    // Mapping to store warranty details, NFT ownership, and Seller/Consumer data
+
+    mapping(uint256 => WarrantyToken) public mWarrantyTokenById;
+    mapping(uint256 => address) public mWarrantyOwnerAddressByTokenId;
+    mapping(address => bool) private _mIsSellerByAddress;
+    mapping(address => bool) private _mIsConsumerByAddress;
+    mapping(address => Seller) public mSellersByAddress;
+    mapping(address => Consumer) public mConsumersByAddress;
+    //mapping(uint256 => bytes32) private _tokenIdToIPFSHash;
+    //mapping(uint256 => address) private _mTokenSaleContracts;
+
+    // Contract-level variables
+    address public guarantifyContractAddress;
     //string private _baseURI;
 
-    enum NFTStatus {
+    // Enums for NFT status
+    enum WarrantyTokenStatus {
         Pending,
-        Verified,
-        Disabled,
         Enabled,
         Expired,
         ForSale
-        //Claimed,
     }
-    struct seller {
+
+    // Structs for Sellers, Consumers, and warranty details
+    struct Seller {
         uint256 id;
-        uint256 itemCounter;
         address sellerAddress;
         uint256[] allNFTs;
         uint256[] allNFTsOnSale;
-        //string tokenURI;
     }
 
-    struct consumer {
+    struct Consumer {
         uint256 id;
-        uint256 itemCounter;
-        address consumerAddress;
+        address ConsumerAddress;
         uint256[] allNFTs;
         uint256[] allNFTsOnSale;
-        //string tokenURI;
     }
 
-    struct WarrantyDetails {
+    struct WarrantyToken {
         uint256 id;
         bytes32 verifyHash;
-        NFTStatus status;
+        WarrantyTokenStatus status;
         bytes32 codeGTIN;
         uint256 invoiceNumber;
         string productType;
-        uint256 warrantyDuration;
+        uint256 warrantyDurationInDay;
         uint256 purchaseDate;
-        address seller;
+        address sellerAddress;
         address buyer;
         uint256 price;
         uint256 resalePrice;
+
+        //uint256 resallerAdress;
         //uint256[] buyers;
         //uint256[] buyersDate;
     }
 
-    mapping(uint256 => WarrantyDetails) public warrantyDetails;
-    mapping(address => bool) private _isSeller;
-    mapping(address => uint256) public addressToSellerId;
-    mapping(uint256 => seller) public allSellers;
-    mapping(address => seller) public mSeller;
-    mapping(uint256 => address) private _tokenSaleContracts;
-    mapping(address => bool) private _isConsumer;
-    mapping(address => uint256) public addressToConsumerId;
-    mapping(uint256 => consumer) public allConsumers;
-    mapping(address => consumer) public mConsumer;
-    //mapping(uint256 => bytes32) private _tokenIdToIPFSHash;
+    // Events
+    event eventWarrantyTokenIsCreated(
+        uint256 tokenId,
+        string gtin,
+        address owner
+    );
+    event eventWarrantyTokenIsPending(
+        uint256 tokenId,
+        string gtin,
+        address owner
+    );
+    event eventWarrantyTokenIsEnabled(uint256 tokenId, address owner);
+    event eventWarrantyTokenIsExpired(uint256 tokenId, address owner);
+    event eventWarrantyTokenIsBurned(uint256 tokenId, address owner);
+    event eventWarrantyTokenIsTransfered(
+        uint256 tokenId,
+        address owner,
+        uint256 resalePrice,
+        address to
+    );
+    event eventWarrantyTokenIsVerified(uint256 tokenId, address owner);
 
-    event WarrantyCreated(uint256 tokenId, string gtin, address owner);
-    //bytes32 ipfsHash,
+    //event eventWarrantyTokenIsOnSale(uint256 tokenId,uint256 price, address owner    );
 
-    event WarrantyisPending(uint256 tokenId);
-    event WarrantyVerified(uint256 tokenId, address owner);
-    event WarrantyDisabled(uint256 tokenId);
-    event WarrantyEnabled(uint256 tokenId);
-    event NFTForSale(uint256 tokenId, uint256 price, address owner);
-    event NFTBurn(uint256 tokenId);
+    // Constructor
+    constructor() ERC721("GuarantifyNFT", "GNFT") {
+        guarantifyContractAddress = address(this);
+        _addGuarantifyContractAddress();
+    }
 
-    //event WarrantyClaimed(uint256 tokenId);
-
-    constructor() ERC721("GuarantifyNFT", "GNFT") {}
-
-    /*constructor(
-        string memory name,
-        string memory symbol,
-        string memory baseURI_
-    ) ERC721(name, symbol) {
-        // _baseURI = baseURI_;
-    }*/
-
+    // Modifier for only authorized Sellers
     modifier onlyAuthorizedSeller() {
-        //require(_isSeller[msg.sender], "Only sellers can create warranties");
-        //require(msg.sender == allSellers[sellerId].sellerAddress, "Must be seller");
-        require(_isSeller[msg.sender], "Only sellers can create warranties");
+        require(
+            _mIsSellerByAddress[msg.sender],
+            "Only Sellers can create warranties"
+        );
         _;
     }
 
@@ -106,54 +117,53 @@ contract GuarantifyNFTContract is ERC721 {
         string memory _codeGTIN,
         uint256 _invoiceNumber,
         string memory _productType,
-        uint256 _warrantyDuration,
-        uint256 _purchaseDate,
+        uint256 _warrantyDurationInDay,
         uint256 _price
-    ) public onlyAuthorizedSeller returns (uint256) {
+    ) external onlyAuthorizedSeller returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
-        bytes32 verifyHash = getVerifyHash(_codeGTIN, _invoiceNumber); //  keccak256(abi.encode(_invoiceNumber, _codeGTIN));
+        bytes32 verifyHash = getVerifyHash(_codeGTIN, _invoiceNumber);
         // Add the NFT metadata to the mapping
-        WarrantyDetails memory newWarranty = WarrantyDetails({
+        WarrantyToken memory newWarranty = WarrantyToken({
             id: tokenId,
             verifyHash: verifyHash,
-            status: NFTStatus.Pending,
+            status: WarrantyTokenStatus.Pending,
             codeGTIN: stringToBytes32(_codeGTIN),
             invoiceNumber: _invoiceNumber,
             productType: _productType,
-            warrantyDuration: _warrantyDuration,
-            purchaseDate: _purchaseDate,
-            seller: msg.sender,
+            warrantyDurationInDay: _warrantyDurationInDay,
+            purchaseDate: block.timestamp,
+            sellerAddress: msg.sender,
             buyer: address(0),
             price: _price,
             resalePrice: 0
         });
 
-        warrantyDetails[tokenId] = newWarranty;
-        mSeller[msg.sender].allNFTs.push(tokenId);
+        mWarrantyTokenById[tokenId] = newWarranty;
+        mSellersByAddress[msg.sender].allNFTs.push(tokenId);
+        mWarrantyOwnerAddressByTokenId[tokenId] = msg.sender;
 
-        emit WarrantyCreated(tokenId, _codeGTIN, msg.sender);
+        emit eventWarrantyTokenIsCreated(tokenId, _codeGTIN, msg.sender);
 
         _safeMint(msg.sender, tokenId);
         _tokenIdCounter.increment();
 
+        emit eventWarrantyTokenIsPending(tokenId, _codeGTIN, msg.sender);
         return tokenId;
     }
 
-    function verifyOwnership(
+    function verifyOwnershipByHash(
         uint256 tokenId,
         string memory _codeGTIN,
         uint256 _invoiceNumber
-    ) public returns (bool) {
+    ) external returns (bool) {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
 
         bytes32 verifyHash = getVerifyHash(_codeGTIN, _invoiceNumber);
-        if (warrantyDetails[tokenId].verifyHash == verifyHash) {
-            warrantyDetails[tokenId].status = NFTStatus.Verified;
-
-            emit WarrantyVerified(tokenId, msg.sender);
+        if (mWarrantyTokenById[tokenId].verifyHash == verifyHash) {
+            emit eventWarrantyTokenIsVerified(tokenId, msg.sender);
 
             return true;
         } else {
@@ -175,11 +185,19 @@ contract GuarantifyNFTContract is ERC721 {
         _baseURI = baseURI_;
     }*/
 
-    function claimAndEnabledWarranty(uint256 _tokenId) public {
+    function claimAndEnabledWarranty(
+        uint256 _tokenId,
+        string memory _codeGTIN,
+        uint256 _invoiceNumber
+    ) external {
         require(_exists(_tokenId), "WarrantyContract: token does not exist");
         require(
-            warrantyDetails[_tokenId].status == NFTStatus.Disabled,
-            "This warranty is already active"
+            mWarrantyTokenById[_tokenId].status == WarrantyTokenStatus.Pending,
+            "This warranty is not pending active"
+        );
+        require(
+            isVerifyHash(_codeGTIN, _invoiceNumber, _tokenId),
+            "WarrantyContract: hash not verify"
         );
 
         // Transfert de propriété de la garantie
@@ -188,118 +206,153 @@ contract GuarantifyNFTContract is ERC721 {
         _transfer(owner, msg.sender, _tokenId);
 
         // Mise à jour du statut
-        warrantyDetails[_tokenId].status = NFTStatus.Enabled;
+        mWarrantyTokenById[_tokenId].status = WarrantyTokenStatus.Enabled;
 
-        emit WarrantyEnabled(_tokenId);
+        //suppression de la garantie du tableau du Seller
+        _removeNFTInArray(mSellersByAddress[owner].allNFTs, _tokenId);
+
+        //ajout de la garantie du tableau du Consumer
+        mConsumersByAddress[msg.sender].allNFTs.push(_tokenId);
+        mWarrantyOwnerAddressByTokenId[_tokenId] = msg.sender;
+
+        emit eventWarrantyTokenIsEnabled(_tokenId, msg.sender);
     }
 
-    function sellNFT(uint256 tokenId, uint256 price) public {
-        require(_exists(tokenId), "ERC721Metadata: nonexistent token");
+    /**
+     * @dev Transfère une garantie à un nouveau propriétaire et fixe un prix de revente.
+     * @param _to Adresse du nouveau propriétaire de la garantie.
+     * @param _tokenId ID de la garantie à transférer.
+     * @param _resalePrice Prix de revente de la garantie.
+     * @notice Seul le propriétaire actuel de la garantie peut appeler cette fonction.
+     * @notice La garantie doit être activée et en attente d'activation pour pouvoir être transférée.
+     */
+    function resell(
+        address _to,
+        uint256 _tokenId,
+        uint256 _resalePrice
+    ) external {
+        require(_exists(_tokenId), "ERC721Metadata: nonexistent token");
         require(
-            _isApprovedOrOwner(msg.sender, tokenId),
-            "ERC721: transfer caller is not owner nor approved"
-        );
-        require(price > 0, "Price should be greater than zero");
-
-        // Transfer ownership to the smart contract
-        safeTransferFrom(msg.sender, address(this), tokenId);
-
-        // Register the sale contract address for this token
-        _tokenSaleContracts[tokenId] = msg.sender;
-
-        // Update the warranty status to reflect it's now for sale
-        warrantyDetails[tokenId].status = NFTStatus.ForSale;
-        warrantyDetails[tokenId].price = price;
-        mSeller[msg.sender].allNFTsOnSale.push(tokenId);
-
-        // Emit an event
-        emit NFTForSale(tokenId, price, msg.sender);
-    }
-
-    function buyASecondHandGuarantee(uint256 _tokenId) public {
-        require(_exists(_tokenId), "WarrantyContract: token does not exist");
-
-        //récupérer le précédent seller et retirer le NFT de ses NFT à vendre
-        //mSeller[msg.sender].allNFTsOnSale.push(tokenId);
-    }
-
-    function burn(uint256 tokenId) external {
-        //TODO à implémenter
-        emit NFTBurn(tokenId);
-    }
-
-    function disableWarranty(uint256 _tokenId) public {
-        require(_exists(_tokenId), "WarrantyContract: token does not exist");
-        WarrantyDetails storage warranty = warrantyDetails[_tokenId];
-        require(
-            ownerOf(_tokenId) == msg.sender,
-            "WarrantyContract: caller is not the owner of the NFT"
+            mWarrantyTokenById[_tokenId].status == WarrantyTokenStatus.Enabled,
+            "This warranty is not enabled"
         );
         require(
-            warranty.status == NFTStatus.Enabled,
-            "WarrantyContract: warranty is not active"
+            mWarrantyOwnerAddressByTokenId[_tokenId] == msg.sender,
+            "Not Owner of this NFT warranty"
         );
 
-        emit WarrantyDisabled(_tokenId);
+        mWarrantyTokenById[_tokenId].resalePrice = _resalePrice;
+        mWarrantyTokenById[_tokenId].sellerAddress = msg.sender;
+        mWarrantyTokenById[_tokenId].buyer = _to;
+
+        safeTransferFrom(msg.sender, _to, _tokenId);
+
+        //suppression de la garantie du tableau du Seller
+        _removeNFTInArray(mConsumersByAddress[msg.sender].allNFTs, _tokenId);
+
+        //ajout de la garantie du tableau du Consumer
+        mConsumersByAddress[_to].allNFTs.push(_tokenId);
+        mWarrantyOwnerAddressByTokenId[_tokenId] = _to;
+
+        emit eventWarrantyTokenIsTransfered(
+            _tokenId,
+            msg.sender,
+            _resalePrice,
+            _to
+        );
     }
 
-    function addSeller(address _seller) public {
-        require(!_isSeller[_seller], "Seller already added");
+    function burn(uint256 _tokenId) external {
+        require(_exists(_tokenId), "ERC721Metadata: nonexistent token");
+        uint256 expiryDate = _getExpiryDate(_tokenId);
+        require(block.timestamp >= expiryDate, "The garantie is not expired");
+        emit eventWarrantyTokenIsExpired(_tokenId, msg.sender);
+        _burn(_tokenId);
+
+        _removeNFTInArray(mConsumersByAddress[msg.sender].allNFTs, _tokenId);
+        mWarrantyOwnerAddressByTokenId[_tokenId] = address(0);
+        mWarrantyTokenById[_tokenId].status = WarrantyTokenStatus.Expired;
+        emit eventWarrantyTokenIsBurned(_tokenId, msg.sender);
+    }
+
+    function _getExpiryDate(
+        uint256 _tokenId
+    ) private view returns (uint256 expiry) {
+        return
+            mWarrantyTokenById[_tokenId].purchaseDate +
+            (mWarrantyTokenById[_tokenId].warrantyDurationInDay * 86400);
+    }
+
+    function _addGuarantifyContractAddress() private {
+        addSeller(guarantifyContractAddress);
+    }
+
+    function addSeller(address _Seller) public {
+        require(_Seller != address(0), "Invalid Seller address");
+        require(!_mIsSellerByAddress[_Seller], "Seller already added");
         require(
-            msg.sender == _seller,
+            msg.sender == _Seller || guarantifyContractAddress == _Seller,
             "Only the owner of the account can add it"
         );
-        uint256 sellerId = _sellerIdCounter.current();
+        uint256 SellerIdCounter = _sellerIdCounter.current();
+        _mIsSellerByAddress[_Seller] = true;
 
-        _isSeller[_seller] = true;
+        // Create a new Seller struct
+        Seller memory newSeller = Seller({
+            id: SellerIdCounter,
+            sellerAddress: _Seller,
+            allNFTs: new uint256[](0),
+            allNFTsOnSale: new uint256[](0)
+        });
 
-        seller memory newSeller;
-        newSeller.id = sellerId;
-        newSeller.sellerAddress = msg.sender;
-        newSeller.itemCounter = 0;
-        allSellers[sellerId] = newSeller;
-        addressToSellerId[msg.sender] = sellerId;
-        //totalSellers.push(sellerId);
+        // Add the new Seller to the mapping
+        mSellersByAddress[_Seller] = newSeller;
 
         _sellerIdCounter.increment();
     }
 
-    function removeSeller(address _seller) public {
-        require(_isSeller[_seller], "Seller not found");
+    function addConsumer(address _Consumer) external {
+        require(!_mIsConsumerByAddress[_Consumer], "Consumer already added");
         require(
-            msg.sender == _seller,
-            "Only the owner of the account can delete it"
-        );
-        _isSeller[_seller] = false;
-    }
-
-    function addConsumer(address _consumer) public {
-        require(!_isConsumer[_consumer], "Consumer already added");
-        require(
-            msg.sender == _consumer,
+            msg.sender == _Consumer,
             "Only the owner of the account can add it"
         );
-        uint256 consumerId = _consumerIdCounter.current();
+        uint256 ConsumerIdCounter = _ConsumerIdCounter.current();
 
-        _isConsumer[_consumer] = true;
+        _mIsConsumerByAddress[_Consumer] = true;
 
-        consumer memory newConsumer;
-        newConsumer.id = consumerId;
-        newConsumer.consumerAddress = msg.sender;
-        newConsumer.itemCounter = 0;
-        allConsumers[consumerId] = newConsumer;
-        addressToConsumerId[msg.sender] = consumerId;
-        //totalConsumer.push(consumerId);
-        _consumerIdCounter.increment();
+        // Create a new Seller struct
+        Consumer memory newConsumer = Consumer({
+            id: ConsumerIdCounter,
+            ConsumerAddress: _Consumer,
+            allNFTs: new uint256[](0),
+            allNFTsOnSale: new uint256[](0)
+        });
+
+        // Add the new Seller to the mapping
+        mConsumersByAddress[_Consumer] = newConsumer;
+
+        _ConsumerIdCounter.increment();
     }
 
-    function removeConsumer(address _consumer) public {
-        require(_isConsumer[_consumer], "consumer not found");
+    function removeSeller(address _Seller) external {
+        require(_mIsSellerByAddress[_Seller], "Seller not found");
         require(
-            msg.sender == _consumer,
+            msg.sender == _Seller,
             "Only the owner of the account can delete it"
         );
-        _isConsumer[_consumer] = false;
+        _mIsSellerByAddress[_Seller] = false;
+        delete mSellersByAddress[msg.sender];
+    }
+
+    function removeConsumer(address _Consumer) external {
+        require(_mIsConsumerByAddress[_Consumer], "Consumer not found");
+        require(
+            msg.sender == _Consumer,
+            "Only the owner of the account can delete it"
+        );
+        _mIsConsumerByAddress[_Consumer] = false;
+        delete mConsumersByAddress[msg.sender];
     }
 
     function stringToBytes32(
@@ -315,6 +368,21 @@ contract GuarantifyNFTContract is ERC721 {
         }
     }
 
+    function _removeNFTInArray(
+        uint256[] storage _nfts,
+        uint256 _tokenId
+    ) private {
+        for (uint i = 0; i < _nfts.length; i++) {
+            if (_nfts[i] == _tokenId) {
+                for (uint j = i; j < _nfts.length - 1; j++) {
+                    _nfts[j] = _nfts[j + 1];
+                }
+                _nfts.pop();
+                break;
+            }
+        }
+    }
+
     //READ Functions
     function getVerifyHash(
         string memory _codeGTIN,
@@ -323,25 +391,99 @@ contract GuarantifyNFTContract is ERC721 {
         return keccak256(abi.encode(_codeGTIN, _invoiceNumber));
     }
 
-    function isSeller(address _seller) public view returns (bool) {
-        return _isSeller[_seller];
+    function isVerifyHash(
+        string memory _codeGTIN,
+        uint256 _invoiceNumber,
+        uint256 _tokenID
+    ) public view returns (bool) {
+        bytes32 hashSoumis = keccak256(abi.encode(_codeGTIN, _invoiceNumber));
+        bytes32 hashInscrit = mWarrantyTokenById[_tokenID].verifyHash;
+        return _compareHashes(hashSoumis, hashInscrit);
     }
 
-    function isConsumer(address _consumer) public view returns (bool) {
-        return _isConsumer[_consumer];
+    function _compareHashes(
+        bytes32 hash1,
+        bytes32 hash2
+    ) private pure returns (bool) {
+        if (hash1 == hash2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function isSeller(address _Seller) external view returns (bool) {
+        return _mIsSellerByAddress[_Seller];
+    }
+
+    function isConsumer(address _Consumer) external view returns (bool) {
+        return _mIsConsumerByAddress[_Consumer];
     }
 
     //récupérer tous les NFTS non mis en vente d'un vendeur
     function getAllNFTForASeller(
-        address sellerAddress
+        address SellerAddress
     ) external view returns (uint256[] memory) {
-        return mSeller[sellerAddress].allNFTs;
+        return mSellersByAddress[SellerAddress].allNFTs;
     }
 
     //récupérer les NFTS en vente d'un vendeur
     function getAllNFTOnSaleForASeller(
-        address sellerAddress
+        address SellerAddress
     ) external view returns (uint256[] memory) {
-        return mSeller[sellerAddress].allNFTsOnSale;
+        return mSellersByAddress[SellerAddress].allNFTsOnSale;
     }
+
+    /*
+    //TODO à reprendre
+    function sellNFTToContractMarketplace(
+        uint256 tokenId,
+        uint256 price
+    ) external {
+        require(_exists(tokenId), "ERC721Metadata: nonexistent token");
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId),
+            "ERC721: transfer caller is not owner nor approved"
+        );
+        require(price > 0, "Price should be greater than zero");
+
+        // Transfer ownership to the smart contract
+        safeTransferFrom(msg.sender, address(this), tokenId);
+        //TODO A IMPLEMENTER
+        //approve(to, tokenId)
+        //getApproved(tokenId)
+        //setApprovalForAll(operator, _approved)
+        //isApprovedForAll(owner, operator)
+        //safeTransferFrom(from, to, tokenId, data)
+
+        // Register the sale contract address for this token
+        _mTokenSaleContracts[tokenId] = msg.sender;
+
+        // Update the warranty status to reflect it's now for sale
+        mWarrantyTokenById[tokenId].status = WarrantyTokenStatus.ForSale;
+        mWarrantyTokenById[tokenId].price = price;
+        mSellersByAddress[msg.sender].allNFTsOnSale.push(tokenId);
+
+        // Emit an event
+        emit eventWarrantyTokenIsOnSale(tokenId, price, msg.sender);
+    }
+
+    function buyASecondHandGuarantee(uint256 _tokenId) external view {
+        require(_exists(_tokenId), "WarrantyContract: token does not exist");
+        require(
+            isVerifyHash(_codeGTIN, _invoiceNumber, _tokenId),
+            "WarrantyContract: hash not verify"
+        );
+
+        require(
+            warranty.status == WarrantyTokenStatus.ForSale,
+            "WarrantyContract: warranty is not for sale"
+        );
+
+        //TODO
+        //récupérer le précédent Seller et retirer le NFT de ses NFT à vendre
+        //mSellersByAddress[msg.sender].allNFTsOnSale.push(tokenId);
+        emit eventWarrantyTokenIsEnabled(_tokenId, msg.sender);
+    }
+*/
 }
