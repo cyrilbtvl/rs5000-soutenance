@@ -148,6 +148,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDurationInDay = new BN("365");
       const price = new BN("100");
+      const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -161,7 +162,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDurationInDay,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
 
@@ -217,6 +218,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const warrantyDuration = 365;
       const purchaseDate = Date.now();
       const price = 100;
+      const tokenURI = "999";
 
       //try {
       await expectRevert(guarantifyNFTguarantifyNFTContractInstance.createWarranty(
@@ -225,6 +227,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: consumerA }
       ), 'VM Exception while processing transaction: revert Only Sellers can create warranties -- Reason given: Only Sellers can create warranties.');
 
@@ -247,6 +250,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
       const price = new BN("100");
+      const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -260,7 +264,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDuration,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
       // Verify that the WarrantyCreated event was emitted
@@ -270,11 +274,11 @@ contract("GuarantifyNFTContract", (accounts) => {
       const tokenId = tokenIdBNObject.words[0].toString(16);
 
 
-      const expectedURI = "https://ipfs.io/ipfs/0";
+      const expectedURI = "https://ipfs.io/ipfs/999";
 
-      const tokenURI = await guarantifyNFTguarantifyNFTContractInstance.tokenURI(tokenId);
+      const readTokenURI = await guarantifyNFTguarantifyNFTContractInstance.tokenURI(tokenId);
 
-      expect(tokenURI).to.equal(expectedURI);
+      expect(readTokenURI).to.equal(expectedURI);
     });
 
     it("should return correct token URI for a given token ID", async () => {
@@ -300,6 +304,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
       const price = new BN("100");
+      const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -313,6 +318,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: sellerA }
       );
       // Verify that the WarrantyCreated event was emitted
@@ -341,6 +347,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
       const price = new BN("100");
+      const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -352,6 +359,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: sellerB }
       );
       // Verify that the WarrantyCreated event was emitted
@@ -379,7 +387,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -389,7 +397,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDuration,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
 
@@ -426,7 +434,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -436,7 +444,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDuration,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
 
@@ -487,6 +495,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const purchaseDate = new BN(Date.now());
       const price = new BN("100");
       const resalePrice = new BN("50");
+      const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -497,6 +506,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: sellerA }
       );
 
@@ -547,7 +557,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
       const resalePrice = new BN("50");
 
       // Call the addSeller function
@@ -559,6 +569,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: sellerA }
       );
 
@@ -597,7 +608,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
       const resalePrice = new BN("50");
 
       // Call the addSeller function
@@ -609,6 +620,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         productType,
         warrantyDuration,
         price,
+        tokenURI,
         { from: sellerA }
       );
 
@@ -657,7 +669,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const invoiceNumber = new BN("12345");
       const productType = "Product Type";
       const warrantyDurationInDay = new BN("0");
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
 
       // Call the addSeller function
       await guarantifyNFTguarantifyNFTContractInstance.addSeller(sellerA, { from: sellerA });
@@ -667,7 +679,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber0,
         productType,
         warrantyDurationInDay,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
       const result = await guarantifyNFTguarantifyNFTContractInstance.createWarranty(
@@ -675,7 +687,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDurationInDay,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
       await guarantifyNFTguarantifyNFTContractInstance.createWarranty(
@@ -683,7 +695,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber1,
         productType,
         warrantyDurationInDay,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
       // Verify that the WarrantyCreated event was emitted
@@ -747,7 +759,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const productType = "Product Type";
       const warrantyDuration = new BN("365");
       const purchaseDate = new BN(Date.now());
-      const price = new BN("100");
+      const price = new BN("100"); const tokenURI = "999";
       const resalePrice = new BN("50");
 
       // Call the addSeller function
@@ -758,7 +770,7 @@ contract("GuarantifyNFTContract", (accounts) => {
         invoiceNumber,
         productType,
         warrantyDuration,
-        price,
+        price, tokenURI,
         { from: sellerA }
       );
 

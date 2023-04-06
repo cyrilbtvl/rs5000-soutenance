@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract GuarantifyNFTContract is ERC721 {
+contract GuarantifyNFTContract is ERC721URIStorage {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -113,12 +114,14 @@ contract GuarantifyNFTContract is ERC721 {
         return "https://ipfs.io/ipfs/";
     }
 
+    //nommer _JSONHash à la palce de _tokenURI ?
     function createWarranty(
         string memory _codeGTIN,
         uint256 _invoiceNumber,
         string memory _productType,
         uint256 _warrantyDurationInDay,
-        uint256 _price
+        uint256 _price,
+        string memory _tokenURI
     ) external onlyAuthorizedSeller returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         bytes32 verifyHash = getVerifyHash(_codeGTIN, _invoiceNumber);
@@ -145,12 +148,15 @@ contract GuarantifyNFTContract is ERC721 {
         emit eventWarrantyTokenIsCreated(tokenId, _codeGTIN, msg.sender);
 
         _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, _tokenURI); //_tokenURI = "https://ipfs.io/ipfs/bafybeihq5lkvgdrvb5anznlb53dgc3ise67ownsrgbfnrk7zth5jzaw2aa";
         _tokenIdCounter.increment();
 
         emit eventWarrantyTokenIsPending(tokenId, _codeGTIN, msg.sender);
         return tokenId;
     }
 
+    //TODO devrait être renommé en verify hash token by gtin invoice
+    // et creer un mapping  mWarrantyTokenByHash[hashToken] et une fontion qui l'appel avec en parametre _codeGTIN et numero de facture
     function verifyOwnershipByHash(
         uint256 tokenId,
         string memory _codeGTIN,
@@ -173,7 +179,7 @@ contract GuarantifyNFTContract is ERC721 {
 
     function tokenURI(
         uint256 _tokenId
-    ) public view override(ERC721) returns (string memory) {
+    ) public view override(ERC721URIStorage) returns (string memory) {
         require(
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
@@ -435,55 +441,7 @@ contract GuarantifyNFTContract is ERC721 {
     }
 
     /*
-    //TODO à reprendre
     function sellNFTToContractMarketplace(
-        uint256 tokenId,
-        uint256 price
-    ) external {
-        require(_exists(tokenId), "ERC721Metadata: nonexistent token");
-        require(
-            _isApprovedOrOwner(msg.sender, tokenId),
-            "ERC721: transfer caller is not owner nor approved"
-        );
-        require(price > 0, "Price should be greater than zero");
-
-        // Transfer ownership to the smart contract
-        safeTransferFrom(msg.sender, address(this), tokenId);
-        //TODO A IMPLEMENTER
-        //approve(to, tokenId)
-        //getApproved(tokenId)
-        //setApprovalForAll(operator, _approved)
-        //isApprovedForAll(owner, operator)
-        //safeTransferFrom(from, to, tokenId, data)
-
-        // Register the sale contract address for this token
-        _mTokenSaleContracts[tokenId] = msg.sender;
-
-        // Update the warranty status to reflect it's now for sale
-        mWarrantyTokenById[tokenId].status = WarrantyTokenStatus.ForSale;
-        mWarrantyTokenById[tokenId].price = price;
-        mSellersByAddress[msg.sender].allNFTsOnSale.push(tokenId);
-
-        // Emit an event
-        emit eventWarrantyTokenIsOnSale(tokenId, price, msg.sender);
-    }
-
-    function buyASecondHandGuarantee(uint256 _tokenId) external view {
-        require(_exists(_tokenId), "WarrantyContract: token does not exist");
-        require(
-            isVerifyHash(_codeGTIN, _invoiceNumber, _tokenId),
-            "WarrantyContract: hash not verify"
-        );
-
-        require(
-            warranty.status == WarrantyTokenStatus.ForSale,
-            "WarrantyContract: warranty is not for sale"
-        );
-
-        //TODO
-        //récupérer le précédent Seller et retirer le NFT de ses NFT à vendre
-        //mSellersByAddress[msg.sender].allNFTsOnSale.push(tokenId);
-        emit eventWarrantyTokenIsEnabled(_tokenId, msg.sender);
-    }
+    function buyASecondHandGuarantee(uint256 _tokenId)
 */
 }
