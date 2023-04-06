@@ -1,5 +1,5 @@
 const actions = {
-  init: "INIT"
+  init: "INIT",
 };
 
 const initialState = {
@@ -20,4 +20,8 @@ const reducer = (state, action) => {
   }
 };
 
-export { actions, initialState, reducer };
+export {
+  actions,
+  initialState,
+  reducer
+};

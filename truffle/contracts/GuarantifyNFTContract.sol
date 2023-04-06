@@ -93,6 +93,11 @@ contract GuarantifyNFTContract is ERC721URIStorage {
     );
     event eventWarrantyTokenIsVerified(uint256 tokenId, address owner);
 
+    event eventWarrantyTokenSellerAdded(address sellerAddress);
+    event eventWarrantyTokenConsumerAdded(address consumerAddress);
+    event eventWarrantyTokenSellerRemoved(address sellerAddress);
+    event eventWarrantyTokenConsumerRemoved(address consumerAddress);
+
     //event eventWarrantyTokenIsOnSale(uint256 tokenId,uint256 price, address owner    );
 
     // Constructor
@@ -315,6 +320,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         mSellersByAddress[_Seller] = newSeller;
 
         _sellerIdCounter.increment();
+        emit eventWarrantyTokenSellerAdded(_Seller);
     }
 
     function addConsumer(address _Consumer) external {
@@ -339,6 +345,8 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         mConsumersByAddress[_Consumer] = newConsumer;
 
         _ConsumerIdCounter.increment();
+
+        emit eventWarrantyTokenConsumerAdded(_Consumer);
     }
 
     function removeSeller(address _Seller) external {
@@ -349,6 +357,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         );
         _mIsSellerByAddress[_Seller] = false;
         delete mSellersByAddress[msg.sender];
+        emit eventWarrantyTokenSellerRemoved(_Seller);
     }
 
     function removeConsumer(address _Consumer) external {
@@ -359,6 +368,8 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         );
         _mIsConsumerByAddress[_Consumer] = false;
         delete mConsumersByAddress[msg.sender];
+
+        emit eventWarrantyTokenConsumerRemoved(_Consumer);
     }
 
     function stringToBytes32(
