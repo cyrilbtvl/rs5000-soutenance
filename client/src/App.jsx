@@ -16,16 +16,17 @@ function App() {
   const [isConsumer, setIsConsumer] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
+  const [walletAddressAnonymized, setWalletAddressAnonymized] = useState("");
 
   return (
     <EthProvider>
       <div id="App">
         <div className="container">
-          <WalletBtnConnect walletAddress={walletAddress} setWalletAddress={setWalletAddress} />
-          <Account isConsumer={isConsumer} setIsConsumer={setIsConsumer} isSeller={isSeller} setIsSeller={setIsSeller} walletAddress={walletAddress} />
-          <AnonymePanel walletAddress={walletAddress} isConsumer={isConsumer} isSeller={isSeller} />
-          <SellerPanel walletAddress={walletAddress} isSeller={isSeller} />
-          <ConsumerPanel walletAddress={walletAddress} isConsumer={isConsumer} />
+          <WalletBtnConnect walletAddress={walletAddress} setWalletAddress={setWalletAddress} walletAddressAnonymized={walletAddressAnonymized} setWalletAddressAnonymized={setWalletAddressAnonymized} />
+          <Account isConsumer={isConsumer} setIsConsumer={setIsConsumer} isSeller={isSeller} setIsSeller={setIsSeller} walletAddress={walletAddress} walletAddressAnonymized={walletAddressAnonymized} />
+          <AnonymePanel walletAddress={walletAddress} walletAddressAnonymized={walletAddressAnonymized} isConsumer={isConsumer} isSeller={isSeller} />
+          <SellerPanel walletAddress={walletAddress} walletAddressAnonymized={walletAddressAnonymized} isSeller={isSeller} isConsumer={isConsumer} />
+          <ConsumerPanel walletAddress={walletAddress} walletAddressAnonymized={walletAddressAnonymized} isConsumer={isConsumer} isSeller={isSeller} />
           {/*
           */}
         </div>

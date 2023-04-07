@@ -12,7 +12,7 @@ export const getCurrentWalletConnected = async () => {
             } else {
                 return {
                     address: "",
-                    status: "🦊 Connect to Metamask using the button below.",
+                    status: "🦊 Connectez-vous à Metamask en utilisant le bouton ci-dessous.",
                 };
             }
         } catch (err) {
@@ -36,9 +36,15 @@ export const connectWallet = async () => {
             };
             return obj;
         } catch (err) {
+            let messageErrorStatus = "";
+            if (err.message === "Already processing eth_requestAccounts. Please wait.") {
+                messageErrorStatus = "Une transaction est en cours dans votre metamask. Veuillez vérifier.";
+            } else {
+                messageErrorStatus = err.message;
+            }
             return {
                 address: "",
-                status: "😥 " + err.message,
+                status: "😥 " + messageErrorStatus,
             };
         }
     } else {

@@ -1,27 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Segment, Header, Button, Message, Icon, Grid, Divider, Modal } from "semantic-ui-react";
 import { useEth } from "../../contexts/EthContext";
 
 
-function AnonymePanel({ walletAddress }) {
+function AnonymePanel({ walletAddress, walletAddressAnonymized, isConsumer, isSeller }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [open, setOpen] = useState(false);
   const [errorCode, setErrorCode] = useState("");
-
   const { state: { accounts, contract, artifact }, } = useEth();
-  //setErrorCode(e.code);
-  //console.error("OwnerPanel : mon erreur : " + errorCode);
-  //setErrorMessage("Please add a correct address.");
+
+  useEffect(() => {
+    async function initConsumerPanel() {
+      console.log("ConsumerPanel : useEffect initConsumerPanel : isSeller ", isSeller);
+      console.log("ConsumerPanel : useEffect initConsumerPanel : isConsumer ", isConsumer);
+    };
+    initConsumerPanel();
+  }, [accounts, isSeller, isConsumer]);
+
   const createSeller = async () => {
     if (artifact) {
       try {
 
         await contract.methods.addSeller(walletAddress).send({ from: accounts[0] });
-        //await contract.methods.addSeller(walletAddress).call({ from: accounts[0] });
-        //emit eventWarrantyTokenSellerAdded(_Seller);
+        //emit eventWarrantyTokenSellerAdded(walletAddress);
         console.log("AnonymePanel : new seller : " + walletAddress);
-
-        //window.location.reload();
+        window.location.reload();
 
       } catch (e) {
 
@@ -36,8 +39,31 @@ function AnonymePanel({ walletAddress }) {
     }
   };
 
+  const createConsumer = async () => {
+    if (artifact) {
+      try {
+
+        await contract.methods.addConsumer(walletAddress).send({ from: accounts[0] });
+        //emit eventWarrantyTokenConsumerAdded(walletAddress);
+        console.log("AnonymePanel : new Consumer : " + walletAddress);
+        window.location.reload();
+
+      } catch (e) {
+
+        setOpen(true);
+        setErrorCode(e.code);
+        console.error("AnonymePanel : mon erreur addConsumer : " + errorCode);
+        setErrorMessage(e.message);
+        console.error("AnonymePanel : mon erreur message addConsumer : " + errorMessage);
+      }
+    } else {
+      console.log("AnonymePanel : user not connected");
+    }
+  };
+
+
   return (
-    walletAddress !== "" && (
+    walletAddress !== "" && !isConsumer && !isSeller && (
       <Segment raised size="huge" color="blue">
         <Modal
           centered={false}
@@ -59,7 +85,7 @@ function AnonymePanel({ walletAddress }) {
 
         <Message>
           <Message.Header>Bienvenue sur notre application de gestion de garanties</Message.Header>
-          <p>Merci de choisir votre type de compte pour l'adresse {walletAddress}</p>
+          <p>Merci de choisir votre type de compte pour l'adresse : {walletAddressAnonymized}</p>
         </Message>
 
         <Divider />
@@ -71,7 +97,7 @@ function AnonymePanel({ walletAddress }) {
               <Button positive size='huge' content='Créer un compte vendeur' onClick={createSeller} />
             </Grid.Column>
             <Grid.Column width={8} verticalAlign='middle'>
-              <Button positive size='huge' content='Créer un compte consommateur' />
+              <Button positive size='huge' content='Créer un compte consommateur' onClick={createConsumer} />
             </Grid.Column>
           </Grid>
           <Divider vertical><Icon name='arrows alternate horizontal' /></Divider>

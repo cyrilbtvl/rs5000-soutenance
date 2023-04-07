@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Segment, Header, Button, Message, Icon, Grid, Divider, Modal } from "semantic-ui-react";
 import { useEth } from "../../contexts/EthContext";
 
 
-function ConsumerPanel({ walletAddress, isConsumer }) {
+function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsumer }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [open, setOpen] = useState(false);
   const [errorCode, setErrorCode] = useState("");
   const { state: { accounts, contract, artifact }, } = useEth();
 
+  useEffect(() => {
+    async function initConsumerPanel() {
+      console.log("ConsumerPanel : useEffect initConsumerPanel : isSeller ", isSeller);
+      console.log("ConsumerPanel : useEffect initConsumerPanel : isConsumer ", isConsumer);
+    };
+    initConsumerPanel();
+  }, [accounts, isSeller, isConsumer]);
+
+
   const _isConsumer = async () => {
-    if (artifact) {
+    if (artifact && contract) {
       try {
 
         await contract.methods.isSeller(walletAddress).send({ from: accounts[0] });
         //await contract.methods.addSeller(walletAddress).call({ from: accounts[0] });
         //emit eventWarrantyTokenSellerAdded(_Seller);
-        console.log("SellerPanel : new seller : " + walletAddress);
+        console.log("SellerPanel : new seller : " + walletAddressAnonymized);
 
         //window.location.reload();
 
@@ -24,12 +33,12 @@ function ConsumerPanel({ walletAddress, isConsumer }) {
 
         setOpen(true);
         setErrorCode(e.code);
-        console.error("SellerPanel : mon erreur _isSeller : " + errorCode);
+        console.error("ConsumerPanel : mon erreur _isConsumer : " + errorCode);
         setErrorMessage(e.message);
-        console.error("SellerPanel : mon erreur message _isSeller : " + errorMessage);
+        console.error("ConsumerPanel : mon erreur message _isConsumer : " + errorMessage);
       }
     } else {
-      console.log("SellerPanel : user not connected");
+      console.log("ConsumerPanel : user not connected");
     }
   };
 
