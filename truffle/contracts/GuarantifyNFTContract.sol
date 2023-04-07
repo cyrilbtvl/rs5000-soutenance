@@ -17,6 +17,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
     // Mapping to store warranty details, NFT ownership, and Seller/Consumer data
 
     mapping(uint256 => WarrantyToken) public mWarrantyTokenById;
+    mapping(uint256 => string) public mWarrantyURITokenById;
     mapping(uint256 => address) public mWarrantyOwnerAddressByTokenId;
     mapping(address => bool) private _mIsSellerByAddress;
     mapping(address => bool) private _mIsConsumerByAddress;
@@ -146,6 +147,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
             resalePrice: 0
         });
 
+        mWarrantyURITokenById[tokenId] = _tokenURI;
         mWarrantyTokenById[tokenId] = newWarranty;
         mSellersByAddress[msg.sender].allNFTs.push(tokenId);
         mWarrantyOwnerAddressByTokenId[tokenId] = msg.sender;

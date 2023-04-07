@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Segment, Header, Button, Message, Divider, Modal, Form, Card, Image, Input } from "semantic-ui-react";
 import { useEth } from "../../contexts/EthContext";
 import axios from "axios";
+import Web3 from "web3";
+
 import _ from 'lodash';
 require('dotenv').config();
 const pinatakey = process.env.REACT_APP_PINATA_KEY;
@@ -25,8 +27,8 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
   //const [hashFileIpfs, setHashFileIpfs] = useState("");
 
   const [sellerId, setSellerId] = useState();
+  const [allNFTs, setAllNFTs] = useState([]);
   //const [sellerAddress, setSellerAddress] = useState("");
-  //const [allNFTs, setAllNFTs] = useState([]);
   //const [allNFTsOnSale, setAllNFTsOnSale] = useState([]);
 
   useEffect(() => {
@@ -35,12 +37,45 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
       console.log("SellerPanel : useEffect initSellerPanel : isConsumer ", isConsumer);
       if (contract) {
         console.log("//// SellerPanel : initSellerPanel , contract is OK \\\\\\\\ ");
+        console.log("SellerPanel : useEffect initSellerPanel : walletAddress ", walletAddress);
         let sellerData = await contract.methods.mSellersByAddress(walletAddress).call();
+        console.log("SellerPanel : useEffect initSellerPanel : sellerData ", sellerData);
         setSellerId(sellerData.id); // représentation de uint256 avec number
-        console.log("ConsumerPanel : useEffect initSellerPanel : sellerId ", sellerId);
-
+        console.log("SellerPanel : useEffect initSellerPanel : sellerId ", sellerId);
         //setSellerAddress(sellerData.sellerAddress); // représentation de address avec string
-        //setAllNFTs(sellerData.allNFTs); // représentation de uint256[] avec number[]
+
+        let sellerNFTs = await contract.methods.getAllNFTForASeller(walletAddress).call();
+
+        if (sellerNFTs) {
+          console.log("SellerPanel : useEffect initSellerPanel : allNFTs ", sellerNFTs);
+          let warrantyTokens = [];
+          const web3 = new Web3();
+          for (let i = 0; i < sellerNFTs.length; i++) {
+            let warrantyToken = await contract.methods.mWarrantyTokenById(sellerNFTs[i]).call();
+            let urlJSON = await contract.methods.mWarrantyURITokenById(warrantyToken.id).call();
+            console.log("SellerPanel : url ", urlJSON);
+
+            try {
+              const response = await fetch(urlJSON);
+              const data = await response.json();
+              const _urlFile = data.imageHash;
+
+              warrantyToken.urlFile = "https://gateway.pinata.cloud/ipfs/" + _urlFile; //url.url;
+              let codeGTINInString = web3.utils.hexToAscii(warrantyToken.codeGTIN).trim();
+              console.log("codeGTINInString : ", codeGTINInString);
+
+              warrantyToken.stringCodeGTIN = codeGTINInString;
+              warrantyTokens.push(warrantyToken);
+              console.log("--- warrantyTokens : ", warrantyTokens);
+              setAllNFTs(warrantyTokens);
+              //setAllNFTs(sellerData.allNFTs.map(nft => parseInt(nft)));
+            } catch (error) {
+              console.log(error);
+            }
+          }
+
+        }
+
         //setAllNFTsOnSale(sellerData.allNFTsOnSale); // représentation de address[] avec string[]
       } else {
         console.log("//// SellerPanel : initSellerPanel ,no contract\\\\\\\\ ");
@@ -147,6 +182,10 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
               try {
                 const resTokenId = await contract.methods.createWarranty(gtin, invoiceNumber, typeOfProduct, warrantyDurationInDay, price, pinataUrl).send({ from: accounts[0] });
                 console.log("SellerPanel : createWarranty : resTokenId - ", resTokenId);
+
+                //let sellerData = await contract.methods.mSellersByAddress(walletAddress).call();
+                //console.log("SellerPanel : createWarranty :NFTs : ", sellerData.allNFTs);
+
               } catch (e) {
 
                 setOpen(true);
@@ -164,7 +203,7 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
           console.log("SellerPanel : user not connected");
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   };
@@ -177,26 +216,30 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
   };
 
   // TODO A remplacer par les NFT
-  const cards = [
-    {
-      avatar: 'https://gateway.pinata.cloud/ipfs/QmXQrgwWVMz2jyjkPDad6BuFiyRcViJnmZozLZaLkdj7Ld',
-      date: 'Joined in 2013',
-      header: 'Helen',
-      description: 'Primary Contact',
-    },
-    {
-      avatar: 'https://gateway.pinata.cloud/ipfs/QmNbLbs6WPDry7nUitTqvxu4i3gUrgT2pFj7wC2kpEhvU2',
-      date: 'Joined in 2013',
-      header: 'Matthew',
-      description: 'Primary Contact',
-    },
-    {
-      avatar: 'https://gateway.pinata.cloud/ipfs/Qmf5Tp3W7Am2YVJ3HdzsSUYjjNxMEBp7VyiKADZ4aHvUAc',
-      date: 'Joined in 2013',
-      header: 'Molly',
-      description: 'Primary Contact',
-    },
-  ]
+  /*
+    const allNFT = [
+      {
+        urlFile: 'https://gateway.pinata.cloud/ipfs/QmXQrgwWVMz2jyjkPDad6BuFiyRcViJnmZozLZaLkdj7Ld',
+        warrantyDurationInDay: 'Joined in 2013',
+        productType: 'Helen',
+        codeGTIN: 'Primary Contact',
+        invoiceNumber: "813385",
+      },
+      {
+        urlFile: 'https://gateway.pinata.cloud/ipfs/QmNbLbs6WPDry7nUitTqvxu4i3gUrgT2pFj7wC2kpEhvU2',
+        warrantyDurationInDay: 'Joined in 2013',
+        productType: 'Matthew',
+        codeGTIN: 'Primary Contact',
+        invoiceNumber: "99988",
+      },
+      {
+        urlFile: 'https://gateway.pinata.cloud/ipfs/Qmf5Tp3W7Am2YVJ3HdzsSUYjjNxMEBp7VyiKADZ4aHvUAc',
+        warrantyDurationInDay: 'Joined in 2013',
+        productType: 'Molly',
+        codeGTIN: 'Primary Contact',
+        invoiceNumber: "554568",
+      },
+    ]*/
 
   return (
     isSeller && (
@@ -220,9 +263,9 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
         <Header as="h2">Seller's panel</Header>
 
         <Message>
-          <Message.Header>Changes in Seller PAnel</Message.Header>
-          <p>Votre adresse de wallet : {walletAddressAnonymized} </p>
-          <p>Votre identifiant de vendeur : {sellerId} </p>
+          <Message.Header>Vos informations : </Message.Header>
+          <p>adresse de wallet : {walletAddressAnonymized} </p>
+          <p>identifiant de vendeur : {sellerId} </p>
         </Message>
 
         <Divider />
@@ -281,14 +324,15 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
 
         <Segment>
           <Card.Group doubling itemsPerRow={3} stackable>
-            {_.map(cards, (card) => (
-              <Card key={card.header}>
-                <Image src={card.avatar} />
+            {_.map(allNFTs, (card) => (
+              <Card key={card.productType}>
+                <Image src={card.urlFile} />
                 <Card.Content>
                   <>
-                    <Card.Header>{card.header}</Card.Header>
-                    <Card.Meta>{card.date}</Card.Meta>
-                    <Card.Description>{card.description}</Card.Description>
+                    <Card.Header>{card.productType}</Card.Header>
+                    <Card.Meta>Code GTIN : {card.stringCodeGTIN}</Card.Meta>
+                    <Card.Meta>Numéro de facture : {card.invoiceNumber}</Card.Meta>
+                    <Card.Description>Jour de garantie initial : {card.warrantyDurationInDay}</Card.Description>
                   </>
                 </Card.Content>
                 <Card.Content extra>
