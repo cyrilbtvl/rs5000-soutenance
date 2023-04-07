@@ -35,7 +35,6 @@ function WalletBtnConnect({ walletAddress, setWalletAddress, walletAddressAnonym
 
   }
 
-
   function addWalletListener() {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", (accounts) => {

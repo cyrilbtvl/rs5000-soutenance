@@ -88,98 +88,78 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
         console.log('réponse pinFileToIPFS : data : ', res.data);
         const IpfsHash = res.data.IpfsHash;
         console.log('réponse pinFileToIPFS : IpfsHash : ', IpfsHash);
-        //setHashFileIpfs(IpfsHash);
 
-        /*
-              onMintPressed(hashFileIpfs);
-            }
-          };
-        
-        
-        
-          const onMintPressed = async (hfi) => {
-        
-            console.log('onMintPressed : hfi : ', hfi);*/
         if (artifact) {
-          try {
-
-            const isSel = await contract.methods.isSeller(walletAddress).call({ from: accounts[0] });
-            console.log("SellerPanel : onMintPressed : isSeller - ", isSel);
-
-            //window.location.reload();
-            //console.log('onMintPressed : hashFileIpfs : ', hashFileIpfs);
-            if (typeof IpfsHash === 'undefined' || IpfsHash === "" || gtin.trim() === "" || typeOfProduct.trim() === "") {
-              console.error('Tous les champs sont obligatoire');
-              console.error('Vous ne pouvez pas minter : hashFileIpfs is ', IpfsHash);
-            } else {
-
-              //DEBUT
-              const metadata = {
-                gtin: gtin,
-                invoiceNumber: invoiceNumber,
-                typeOfProduct: typeOfProduct,
-                warrantyDurationInDay: warrantyDurationInDay,
-                price: price,
-                imageHash: IpfsHash
-              };
 
 
-              const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-              const resPinJSONToIPFS = await axios.post(url, metadata, {
-                headers: {
-                  pinata_api_key: pinatakey,
-                  pinata_secret_api_key: pinatasecret,
-                }
+          //window.location.reload();
+          //console.log('onMintPressed : hashFileIpfs : ', hashFileIpfs);
+          if (typeof IpfsHash === 'undefined' || IpfsHash === "" || gtin.trim() === "" || typeOfProduct.trim() === "") {
+            console.error('Tous les champs sont obligatoire');
+            console.error('Vous ne pouvez pas minter : hashFileIpfs is ', IpfsHash);
+          } else {
+
+            //DEBUT PinJSONToIPFS
+            const metadata = {
+              gtin: gtin,
+              invoiceNumber: invoiceNumber,
+              typeOfProduct: typeOfProduct,
+              warrantyDurationInDay: warrantyDurationInDay,
+              price: price,
+              imageHash: IpfsHash
+            };
+
+
+            const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+            const resPinJSONToIPFS = await axios.post(url, metadata, {
+              headers: {
+                pinata_api_key: pinatakey,
+                pinata_secret_api_key: pinatasecret,
+              }
+            })
+              .then(function (response) {
+                console.log("pinata.js - pinJSONToIPFS : response post", response.data.IpfsHash);
+                return {
+                  success: true,
+                  pinataUrl: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash
+                };
               })
-                .then(function (response) {
-                  console.log("pinata.js - pinJSONToIPFS : response post", response.data.IpfsHash);
-                  return {
-                    success: true,
-                    pinataUrl: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash
-                  };
-                })
-                .catch(function (error) {
-                  console.error("pinata.js - pinJSONToIPFS : error", error);
-                  return {
-                    success: false,
-                    message: error.message,
-                  }
+              .catch(function (error) {
+                console.error("pinata.js - pinJSONToIPFS : error", error);
+                return {
+                  success: false,
+                  message: error.message,
+                }
 
-                });
+              });
 
-              console.log('==========>SellerPanel : onMintPressed - resPinJSONToIPFS ', resPinJSONToIPFS);
-              const pinataUrl = resPinJSONToIPFS.pinataUrl;
-              setTokenURI(pinataUrl);
-              console.log('==========>SellerPanel : onMintPressed - pinataUrl ', pinataUrl);
+            console.log('==========>SellerPanel : onMintPressed - resPinJSONToIPFS ', resPinJSONToIPFS);
+            const pinataUrl = resPinJSONToIPFS.pinataUrl;
+            setTokenURI(pinataUrl);
+            console.log('SellerPanel : onMintPressed - pinataUrl ', pinataUrl);
 
-              //FIN
+            //FIN PinJSONToIPFS
 
 
-              //const _tokenURI = await pinJSON(gtin, invoiceNumber, typeOfProduct, warrantyDurationInDay, price, IpfsHash);
-              //setTokenURI(_tokenURI);
-              //console.log('==========>SellerPanel : onMintPressed - tokenURI ', _tokenURI);
-              /*
-                        setStatus(status);
-                        if (success) {
-                          setGTIN("");
-                          setInvoiceNumber();
-                          setTypeOfProduct("");
-                          setPrice();
-                          //setTokenURI("");
-                          setSelectedFile("");
-                          setHashFileIpfs("");
-                        }*/
 
+            //console.log('SellerPanel : onMintPressed - tokenURI ', tokenURI);
+            if (pinataUrl !== "") {
+              try {
+                const resTokenId = await contract.methods.createWarranty(gtin, invoiceNumber, typeOfProduct, warrantyDurationInDay, price, pinataUrl).send({ from: accounts[0] });
+                console.log("SellerPanel : createWarranty : resTokenId - ", resTokenId);
+              } catch (e) {
+
+                setOpen(true);
+                setErrorCode(e.code);
+                console.error("SellerPanel : mon erreur _isSeller : " + errorCode);
+                setErrorMessage(e.message);
+                console.error("SellerPanel : mon erreur message _isSeller : " + errorMessage);
+              }
+            } else {
+              console.error("SellerPanel : tokenURI is empty");
             }
-
-          } catch (e) {
-
-            setOpen(true);
-            setErrorCode(e.code);
-            console.error("SellerPanel : mon erreur _isSeller : " + errorCode);
-            setErrorMessage(e.message);
-            console.error("SellerPanel : mon erreur message _isSeller : " + errorMessage);
           }
+
         } else {
           console.log("SellerPanel : user not connected");
         }
