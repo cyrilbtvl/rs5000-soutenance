@@ -18,13 +18,7 @@ module.exports = async function (callback) {
 
   // contract instance
   const ContractABI = require("../build/contracts/GuarantifyNFTContract.json");
-  //console.log("ABI : ", JSON.stringify(ContractABI.abi));
-
   var GuarantifyNFTContract = new web3.eth.Contract(ContractABI.abi, CONTRACT_ADDRESS);
-  //console.log("GuarantifyNFTContract : ", GuarantifyNFTContract);
-
-  //const gcAddress = GuarantifyNFTContract.methods.guarantifyContractAddress().call();//.then(console.log);
-  //console.log("gcAddress : ", gcAddress);
 
   let _isSeller = await GuarantifyNFTContract.methods.isSeller(CONTRACT_ADDRESS).call();
   console.log("_isSeller CONTRACT_ADDRESS : ", _isSeller);
@@ -74,8 +68,10 @@ module.exports = async function (callback) {
 
   }
 
+  const balanceOf = await GuarantifyNFTContract.methods.balanceOf("0x082B269669F9871F7Ae21Bc8FBc61a076D9623f3").call();
+  console.log('--- balanceOf before createWarranty : ', balanceOf);
   try {
-    const result = await GuarantifyNFTContract.methods.createWarranty("codeGTIN", 123456, "productType", 0, web3.utils.toWei("1", "ether"), "https://ipfs.io/ipfs/QmVxPfs1M9mPZvjDJDvBvnU6sahp3qsKvXdAXRuwQyXdxR").send({
+    const result = await GuarantifyNFTContract.methods.createWarranty("codeGTIN", 123456, "productType", 0, web3.utils.toWei("1", "ether"), "https://gateway.pinata.cloud/ipfs/QmYw2XCfj16HFSgyo8eLU3C3RXQCcRMjY5PHXvwp31gQXa").send({
       from: "0x082B269669F9871F7Ae21Bc8FBc61a076D9623f3"
     }, function (error, transactionHash) {
       // ...
@@ -90,7 +86,8 @@ module.exports = async function (callback) {
 
     try {
       //await GuarantifyNFTContract.methods.burn(1).call();
-      await GuarantifyNFTContract.methods.burn(2).send({ from: "0x082B269669F9871F7Ae21Bc8FBc61a076D9623f3" }, function (error, transactionHash) {
+      //A incrémenter l'id du burn de la transaction
+      await GuarantifyNFTContract.methods.burn(4).send({ from: "0x082B269669F9871F7Ae21Bc8FBc61a076D9623f3" }, function (error, transactionHash) {
         //console.error('--- error burn: ', error);
       });
 

@@ -95,13 +95,17 @@ contract GuarantifyNFTContract is ERC721URIStorage {
     event eventWarrantyTokenSellerRemoved(address sellerAddress);
     event eventWarrantyTokenConsumerRemoved(address consumerAddress);
 
-    // Constructor
+    /**
+     * Constructor
+     */
     constructor() ERC721("GuarantifyNFT", "GNFT") {
         guarantifyContractAddress = address(this);
         _addGuarantifyContractAddress();
     }
 
-    // Modifier for only authorized Sellers
+    /**
+     * Only Sellers can create warranties
+     */
     modifier onlyAuthorizedSeller() {
         require(
             _mIsSellerByAddress[msg.sender],
@@ -114,7 +118,15 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return "https://ipfs.io/ipfs/";
     }
 
-    //nommer _JSONHash à la palce de _tokenURI ?
+    /*
+     * @dev Create a warranty token
+     * @param _codeGTIN
+     * @param _invoiceNumber
+     * @param _productType
+     * @param _warrantyDurationInDay
+     * @param _price
+     * @param _tokenURI
+     */
     function createWarranty(
         string memory _codeGTIN,
         uint256 _invoiceNumber,
@@ -156,9 +168,13 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return tokenId;
     }
 
-    //TODO devrait être renommé en verify hash token by gtin invoice
-    // et creer un mapping  mWarrantyTokenByHash[hashToken] et une fontion qui l'appel avec en parametre _codeGTIN et numero de facture
-    function verifyOwnershipByHash(
+    /*
+     * @dev Verify a warranty token by codeGTIN and invoice number
+     * @param tokenId
+     * @param _codeGTIN
+     * @param _invoiceNumber
+     */
+    function verifyHashTokenByGtinAndInvoice(
         uint256 tokenId,
         string memory _codeGTIN,
         uint256 _invoiceNumber
@@ -167,7 +183,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
-
+        //creer un mapping  mWarrantyTokenByHash[hashToken] et une fontion qui l'appel avec en parametre _codeGTIN et numero de facture
         bytes32 verifyHash = getVerifyHash(_codeGTIN, _invoiceNumber);
         if (mWarrantyTokenById[tokenId].verifyHash == verifyHash) {
             emit eventWarrantyTokenIsVerified(tokenId, msg.sender);
@@ -188,10 +204,12 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return super.tokenURI(_tokenId);
     }
 
-    /* function setBaseURI(string memory baseURI_) external {
-        _baseURI = baseURI_;
-    }*/
-
+    /*
+     * @dev Claim a warranty token by codeGTIN and invoice number
+     * @param _tokenId
+     * @param _codeGTIN
+     * @param _invoiceNumber
+     */
     function claimAndEnabledWarranty(
         uint256 _tokenId,
         string memory _codeGTIN,
@@ -269,6 +287,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         );
     }
 
+    /*
+     * @dev Burn a warranty token by tokenId
+     * @param _tokenId
+     */
     function burn(uint256 _tokenId) external {
         require(_exists(_tokenId), "ERC721Metadata: nonexistent token");
         uint256 expiryDate = _getExpiryDate(_tokenId);
@@ -282,6 +304,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         emit eventWarrantyTokenIsBurned(_tokenId, msg.sender);
     }
 
+    /*
+     * @dev Get the expiry date of a warranty token by tokenId
+     * @param _tokenId ID de la garantie
+     */
     function _getExpiryDate(
         uint256 _tokenId
     ) private view returns (uint256 expiry) {
@@ -294,6 +320,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         addSeller(guarantifyContractAddress);
     }
 
+    /*
+     * @dev Add a Seller
+     * @param _Seller Adresse du Seller
+     */
     function addSeller(address _Seller) public {
         require(_Seller != address(0), "Invalid Seller address");
         require(!_mIsSellerByAddress[_Seller], "Seller already added");
@@ -319,6 +349,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         emit eventWarrantyTokenSellerAdded(_Seller);
     }
 
+    /*
+     * @dev Add a Consumer
+     * @param _Consumer
+     */
     function addConsumer(address _Consumer) external {
         require(!_mIsConsumerByAddress[_Consumer], "Consumer already added");
         require(
@@ -345,6 +379,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         emit eventWarrantyTokenConsumerAdded(_Consumer);
     }
 
+    /*
+     * @dev Remove a Seller
+     * @param _Seller
+     */
     function removeSeller(address _Seller) external {
         require(_mIsSellerByAddress[_Seller], "Seller not found");
         require(
@@ -356,6 +394,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         emit eventWarrantyTokenSellerRemoved(_Seller);
     }
 
+    /*
+     * @dev Remove a Consumer
+     * @param _Consumer Adresse du Consumer
+     */
     function removeConsumer(address _Consumer) external {
         require(_mIsConsumerByAddress[_Consumer], "Consumer not found");
         require(
@@ -368,6 +410,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         emit eventWarrantyTokenConsumerRemoved(_Consumer);
     }
 
+    /*
+     * @dev Convert a string to bytes32
+     * @param str string to convert
+     */
     function stringToBytes32(
         string memory str
     ) public pure returns (bytes32 result) {
@@ -381,6 +427,11 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         }
     }
 
+    /*
+     * @dev Remove a NFT from the array of NFTs
+     * @param _nfts
+     * @param _tokenId
+     */
     function _removeNFTInArray(
         uint256[] storage _nfts,
         uint256 _tokenId
@@ -396,7 +447,11 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         }
     }
 
-    //READ Functions
+    /*
+     * @dev Verify a hash
+     * @param _codeGTIN
+     * @param _invoiceNumber
+     */
     function getVerifyHash(
         string memory _codeGTIN,
         uint256 _invoiceNumber
@@ -404,6 +459,12 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return keccak256(abi.encode(_codeGTIN, _invoiceNumber));
     }
 
+    /*
+     * @dev Verify a hash
+     * @param _codeGTIN
+     * @param _invoiceNumber
+     * @param _tokenID
+     */
     function isVerifyHash(
         string memory _codeGTIN,
         uint256 _invoiceNumber,
@@ -414,6 +475,11 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return _compareHashes(hashSoumis, hashInscrit);
     }
 
+    /*
+     * @dev Compare two hashes
+     * @param hash1
+     * @param hash2
+     */
     function _compareHashes(
         bytes32 hash1,
         bytes32 hash2
@@ -425,22 +491,36 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         }
     }
 
+    /*
+     * @dev Check if a Seller
+     * @param _Seller
+     */
     function isSeller(address _Seller) external view returns (bool) {
         return _mIsSellerByAddress[_Seller];
     }
 
+    /*
+     * @dev Check if a Consumer
+     * @param _Consumer
+     */
     function isConsumer(address _Consumer) external view returns (bool) {
         return _mIsConsumerByAddress[_Consumer];
     }
 
-    //récupérer tous les NFTS non mis en vente d'un vendeur
+    /*
+     * @dev Récupérer tous les NFTS d'un Seller
+     * @param SellerAddress
+     */
     function getAllNFTForASeller(
         address SellerAddress
     ) external view returns (uint256[] memory) {
         return mSellersByAddress[SellerAddress].allNFTs;
     }
 
-    //récupérer tous les NFTS  d'un consommateur
+    /*
+     * @dev Récupérer tous les NFTS d'un Consumer
+     * @param ConsumerAddress
+     */
     function getAllNFTForAConsumer(
         address ConsumerAddress
     ) external view returns (uint256[] memory) {

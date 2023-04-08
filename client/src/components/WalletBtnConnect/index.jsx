@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react";
-import { Form, Button, Message } from "semantic-ui-react";
+import { Form, Button, Message, Image } from "semantic-ui-react";
 import { connectWallet, getCurrentWalletConnected } from "../../util/connectWallet.js";
-//import { useEth } from "../../contexts/EthContext";
 
 function WalletBtnConnect({ walletAddress, setWalletAddress, walletAddressAnonymized, setWalletAddressAnonymized }) {
-  // const [walletAddress, setWalletAddress] = useState("");
   const [status, setStatus] = useState("");
-  //const { state: { accounts, contract, artifact }, } = useEth();
-
 
   async function fetchData() {
     const { address, status } = await getCurrentWalletConnected();
@@ -63,8 +59,8 @@ function WalletBtnConnect({ walletAddress, setWalletAddress, walletAddressAnonym
     walletAddress === "" && status !== "" ? (
       <div>
 
+        <Image src='https://gateway.pinata.cloud/ipfs/QmYw2XCfj16HFSgyo8eLU3C3RXQCcRMjY5PHXvwp31gQXa' size='small' centered="true" />
         <Message>
-          {/*<Message.Header>Changes in Service</Message.Header>*/}
           <p>{status} </p>
         </Message>
 
@@ -80,10 +76,9 @@ function WalletBtnConnect({ walletAddress, setWalletAddress, walletAddressAnonym
       </Form>
 
     ) : (
-      <Message>
-        <Message.Header>WalletBtnConnect : OK</Message.Header>
-        <p>{walletAddress} </p>
-      </Message>
+
+      <Image src='https://gateway.pinata.cloud/ipfs/QmYw2XCfj16HFSgyo8eLU3C3RXQCcRMjY5PHXvwp31gQXa' size='small' centered="true" />
+
     )
   )
 

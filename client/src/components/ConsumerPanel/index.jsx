@@ -36,7 +36,6 @@ function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isCon
         console.log("ConsumerPanel : useEffect initConsumerPanel : ConsumerData ", consumerData);
         setConsumerId(consumerData.id); // représentation de uint256 avec number
         console.log("ConsumerPanel : useEffect initConsumerPanel : ConsumerId ", consumerId);
-        //setConsumerAddress(ConsumerData.ConsumerAddress); // représentation de address avec string
 
         let ConsumerNFTs = await contract.methods.getAllNFTForAConsumer(walletAddress).call();
 
@@ -70,8 +69,6 @@ function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isCon
           }
 
         }
-
-        //setAllNFTsOnSale(ConsumerData.allNFTsOnSale); // représentation de address[] avec string[]
       } else {
         console.log("//// ConsumerPanel : initConsumerPanel ,no contract\\\\\\\\ ");
       }
@@ -118,21 +115,6 @@ function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isCon
     } catch (e) {
       console.error("searchNFT : mWarrantyTokenById : ", e);
     }
-    /*
-        const NFTsearch = [
-          {
-            urlFile: 'https://gateway.pinata.cloud/ipfs/QmXQrgwWVMz2jyjkPDad6BuFiyRcViJnmZozLZaLkdj7Ld',
-            warrantyDurationInDay: 'Joined in 2013',
-            productType: 'Helen',
-            codeGTIN: 'Primary Contact',
-            invoiceNumber: "813385",
-          }
-        ]
-        if (search === "33") {
-          setAllNFTsSearch(NFTsearch);
-        } else {
-          console.log("searchNFT : not 33: search ", search);
-        }*/
 
   }
   async function claim() {
@@ -152,8 +134,6 @@ function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isCon
         console.log("claim : id :  ", id);
         console.log("claim : codeGTIN :  ", codeGTINInString);
         console.log("claim : invoiceNumber :  ", invoiceNumber);
-        //const codeGTIN = "GTIN455";
-        //const invoiceNumber = 4433;
         await contract.methods.claimAndEnabledWarranty(id, codeGTINInString, invoiceNumber).send({ from: accounts[0] });
         console.log("Garantie " + id + " récupérée et activée.");
       }
@@ -280,6 +260,4 @@ function ConsumerPanel({ walletAddress, walletAddressAnonymized, isSeller, isCon
     )
   );
 }
-
-
 export default ConsumerPanel;

@@ -327,8 +327,8 @@ contract("GuarantifyNFTContract", (accounts) => {
       const tokenIdBNObject = warrantyCreatedLog.args[0];
       const tokenId = tokenIdBNObject.words[0].toString(16);
 
-      //const isOwner = await guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA });
-      const receipt = await guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA });
+      //const isOwner = await guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA });
+      const receipt = await guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA });
 
       const resEvent = await expectEvent(receipt, "eventWarrantyTokenIsVerified", {
         tokenId: tokenId,
@@ -368,7 +368,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const tokenIdBNObject = warrantyCreatedLog.args[0];
       const tokenId = tokenIdBNObject.words[0].toString(16);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
     });
   });
 
@@ -424,7 +424,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEvent.args.owner).to.equal(consumerA);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
     });
 
     it('should revert when claiming warranty for hash no verify', async () => {
@@ -460,7 +460,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       const isVerifyHash = await guarantifyNFTguarantifyNFTContractInstance.isVerifyHash("4556545698744", invoiceNumber, tokenId);
       expect(isVerifyHash).to.be.false;
       await expectRevert(guarantifyNFTguarantifyNFTContractInstance.claimAndEnabledWarranty(tokenId, "4556545698744", invoiceNumber, { from: consumerA }), 'VM Exception while processing transaction: revert WarrantyContract: hash not verify -- Reason given: WarrantyContract: hash not verify.');
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: consumerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: consumerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
 
     });
@@ -530,7 +530,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEvent.args.owner).to.equal(consumerA);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
       await guarantifyNFTguarantifyNFTContractInstance.addConsumer(consumerB, { from: consumerB });
 
@@ -546,7 +546,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEventResell.args.owner).to.equal(consumerA);
       expect(resEventResell.args.to).to.equal(consumerB);
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: consumerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: consumerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
     });
 
@@ -593,7 +593,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEvent.args.owner).to.equal(consumerA);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
       await guarantifyNFTguarantifyNFTContractInstance.addConsumer(consumerB, { from: consumerB });
 
@@ -721,7 +721,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEvent.args.owner).to.equal(consumerA);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
       warranty = await guarantifyNFTguarantifyNFTContractInstance.mWarrantyTokenById(tokenId);
       expect(warranty.warrantyDurationInDay).to.bignumber.equal(warrantyDurationInDay);
@@ -788,7 +788,7 @@ contract("GuarantifyNFTContract", (accounts) => {
 
       expect(resEvent.args.owner).to.equal(consumerA);
 
-      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyOwnershipByHash(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
+      await expectRevert(guarantifyNFTguarantifyNFTContractInstance.verifyHashTokenByGtinAndInvoice(tokenId, codeGTIN, invoiceNumber, { from: sellerA }), 'VM Exception while processing transaction: revert ERC721: transfer caller is not owner nor approved -- Reason given: ERC721: transfer caller is not owner nor approved.');
 
       await guarantifyNFTguarantifyNFTContractInstance.addConsumer(consumerB, { from: consumerB });
 
