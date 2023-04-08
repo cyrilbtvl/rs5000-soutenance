@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Segment, Header, Button, Message, Divider, Modal, Form, Card, Image, Input } from "semantic-ui-react";
+import { Segment, Header, Button, Message, Divider, Modal, Form, Card, Image, Input, Placeholder } from "semantic-ui-react";
 import { useEth } from "../../contexts/EthContext";
 import axios from "axios";
 import Web3 from "web3";
@@ -29,7 +29,6 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
   const [sellerId, setSellerId] = useState();
   const [allNFTs, setAllNFTs] = useState([]);
   //const [sellerAddress, setSellerAddress] = useState("");
-  //const [allNFTsOnSale, setAllNFTsOnSale] = useState([]);
 
   useEffect(() => {
     async function initSellerPanel() {
@@ -53,15 +52,19 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
           for (let i = 0; i < sellerNFTs.length; i++) {
             let warrantyToken = await contract.methods.mWarrantyTokenById(sellerNFTs[i]).call();
             let urlJSON = await contract.methods.mWarrantyURITokenById(warrantyToken.id).call();
-            console.log("SellerPanel : url ", urlJSON);
+            console.log("SellerPanel : urlJSON ", urlJSON);
 
             try {
               const response = await fetch(urlJSON);
               const data = await response.json();
+              //const data1 = { "gtin": "GTIN455", "invoiceNumber": "4433", "typeOfProduct": "taureau", "warrantyDurationInDay": "365", "price": "100", "imageHash": "QmSHEzKjuC15Xgysoz4NeMXiqUDWZV3TFYViujHCBVPMHg" };
+              //console.log("***** SellerPanel : data1 ", data1);
               const _urlFile = data.imageHash;
 
               warrantyToken.urlFile = "https://gateway.pinata.cloud/ipfs/" + _urlFile; //url.url;
               let codeGTINInString = web3.utils.hexToAscii(warrantyToken.codeGTIN).trim();
+              codeGTINInString = codeGTINInString.replace(/\0/g, '');
+
               console.log("codeGTINInString : ", codeGTINInString);
 
               warrantyToken.stringCodeGTIN = codeGTINInString;
@@ -70,19 +73,18 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
               setAllNFTs(warrantyTokens);
               //setAllNFTs(sellerData.allNFTs.map(nft => parseInt(nft)));
             } catch (error) {
-              console.log(error);
+              console.error("fetch(urlJSON) : ", error);
             }
           }
 
         }
 
-        //setAllNFTsOnSale(sellerData.allNFTsOnSale); // représentation de address[] avec string[]
       } else {
         console.log("//// SellerPanel : initSellerPanel ,no contract\\\\\\\\ ");
       }
     };
     initSellerPanel();
-  }, [accounts, contract, artifact, isSeller, isConsumer]);
+  }, [accounts, contract, artifact, isSeller, isConsumer, setAllNFTs]);//allNFTs
 
   const handleSubmission = async () => {
 
@@ -182,6 +184,7 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
               try {
                 const resTokenId = await contract.methods.createWarranty(gtin, invoiceNumber, typeOfProduct, warrantyDurationInDay, price, pinataUrl).send({ from: accounts[0] });
                 console.log("SellerPanel : createWarranty : resTokenId - ", resTokenId);
+                console.log("Nouvelle garantie créée.");
 
                 //let sellerData = await contract.methods.mSellersByAddress(walletAddress).call();
                 //console.log("SellerPanel : createWarranty :NFTs : ", sellerData.allNFTs);
@@ -215,31 +218,6 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
     console.log('selectedFile : ', selectedFile);
   };
 
-  // TODO A remplacer par les NFT
-  /*
-    const allNFT = [
-      {
-        urlFile: 'https://gateway.pinata.cloud/ipfs/QmXQrgwWVMz2jyjkPDad6BuFiyRcViJnmZozLZaLkdj7Ld',
-        warrantyDurationInDay: 'Joined in 2013',
-        productType: 'Helen',
-        codeGTIN: 'Primary Contact',
-        invoiceNumber: "813385",
-      },
-      {
-        urlFile: 'https://gateway.pinata.cloud/ipfs/QmNbLbs6WPDry7nUitTqvxu4i3gUrgT2pFj7wC2kpEhvU2',
-        warrantyDurationInDay: 'Joined in 2013',
-        productType: 'Matthew',
-        codeGTIN: 'Primary Contact',
-        invoiceNumber: "99988",
-      },
-      {
-        urlFile: 'https://gateway.pinata.cloud/ipfs/Qmf5Tp3W7Am2YVJ3HdzsSUYjjNxMEBp7VyiKADZ4aHvUAc',
-        warrantyDurationInDay: 'Joined in 2013',
-        productType: 'Molly',
-        codeGTIN: 'Primary Contact',
-        invoiceNumber: "554568",
-      },
-    ]*/
 
   return (
     isSeller && (
@@ -325,21 +303,21 @@ function SellerPanel({ walletAddress, walletAddressAnonymized, isSeller, isConsu
         <Segment>
           <Card.Group doubling itemsPerRow={3} stackable>
             {_.map(allNFTs, (card) => (
-              <Card key={card.productType}>
-                <Image src={card.urlFile} />
+              <Card key={card.id}>
+                {card.urlFile === "" ? (
+                  <Placeholder>
+                    <Placeholder.Image rectangular />
+                  </Placeholder>
+                ) : (
+                  <Image src={card.urlFile} />)}
                 <Card.Content>
                   <>
                     <Card.Header>{card.productType}</Card.Header>
+                    <Card.Meta>Token ID : {card.id}</Card.Meta>
                     <Card.Meta>Code GTIN : {card.stringCodeGTIN}</Card.Meta>
                     <Card.Meta>Numéro de facture : {card.invoiceNumber}</Card.Meta>
                     <Card.Description>Jour de garantie initial : {card.warrantyDurationInDay}</Card.Description>
                   </>
-                </Card.Content>
-                <Card.Content extra>
-                  <Button primary>
-                    Add
-                  </Button>
-                  <Button >Delete</Button>
                 </Card.Content>
               </Card>
             ))}

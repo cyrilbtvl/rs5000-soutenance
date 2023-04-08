@@ -117,7 +117,7 @@ contract("GuarantifyNFTContract", (accounts) => {
       await guarantifyNFTguarantifyNFTContractInstance.removeConsumer(consumerA, { from: consumerA });
 
       const testAfter = await guarantifyNFTguarantifyNFTContractInstance.mConsumersByAddress(consumerA, { from: consumerA });
-      expect(testAfter.ConsumerAddress).to.equal('0x0000000000000000000000000000000000000000');
+      expect(testAfter.consumerAddress).to.equal('0x0000000000000000000000000000000000000000');
 
       const isConsumer = await guarantifyNFTguarantifyNFTContractInstance.isConsumer(consumerA);
       expect(isConsumer).to.equal(false);
@@ -703,12 +703,6 @@ contract("GuarantifyNFTContract", (accounts) => {
       const warrantyCreatedLog = logs.find(log => log.event === 'eventWarrantyTokenIsCreated');
       const tokenIdBNObject = warrantyCreatedLog.args[0];
       const tokenId = tokenIdBNObject.words[0].toString(16);
-
-      const resultAllNFTsForSale = await guarantifyNFTguarantifyNFTContractInstance.getAllNFTOnSaleForASeller(sellerA);
-      expect(resultAllNFTsForSale).to.be.an('array');
-      expect(resultAllNFTsForSale).to.have.lengthOf(0);
-
-      //expect(resultAllNFTs).to.have.members(tokenId);
 
       let warranty = await guarantifyNFTguarantifyNFTContractInstance.mWarrantyTokenById(tokenId);
       expect(warranty.status).to.be.bignumber.equal(new BN(0)); // WarrantyTokenStatus.Pending

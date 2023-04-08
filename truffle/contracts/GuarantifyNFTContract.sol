@@ -15,7 +15,6 @@ contract GuarantifyNFTContract is ERC721URIStorage {
     Counters.Counter private _ConsumerIdCounter;
 
     // Mapping to store warranty details, NFT ownership, and Seller/Consumer data
-
     mapping(uint256 => WarrantyToken) public mWarrantyTokenById;
     mapping(uint256 => string) public mWarrantyURITokenById;
     mapping(uint256 => address) public mWarrantyOwnerAddressByTokenId;
@@ -23,8 +22,6 @@ contract GuarantifyNFTContract is ERC721URIStorage {
     mapping(address => bool) private _mIsConsumerByAddress;
     mapping(address => Seller) public mSellersByAddress;
     mapping(address => Consumer) public mConsumersByAddress;
-    //mapping(uint256 => bytes32) private _tokenIdToIPFSHash;
-    //mapping(uint256 => address) private _mTokenSaleContracts;
 
     // Contract-level variables
     address public guarantifyContractAddress;
@@ -48,7 +45,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
 
     struct Consumer {
         uint256 id;
-        address ConsumerAddress;
+        address consumerAddress;
         uint256[] allNFTs;
         uint256[] allNFTsOnSale;
     }
@@ -93,13 +90,10 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         address to
     );
     event eventWarrantyTokenIsVerified(uint256 tokenId, address owner);
-
     event eventWarrantyTokenSellerAdded(address sellerAddress);
     event eventWarrantyTokenConsumerAdded(address consumerAddress);
     event eventWarrantyTokenSellerRemoved(address sellerAddress);
     event eventWarrantyTokenConsumerRemoved(address consumerAddress);
-
-    //event eventWarrantyTokenIsOnSale(uint256 tokenId,uint256 price, address owner    );
 
     // Constructor
     constructor() ERC721("GuarantifyNFT", "GNFT") {
@@ -338,7 +332,7 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         // Create a new Seller struct
         Consumer memory newConsumer = Consumer({
             id: ConsumerIdCounter,
-            ConsumerAddress: _Consumer,
+            consumerAddress: _Consumer,
             allNFTs: new uint256[](0),
             allNFTsOnSale: new uint256[](0)
         });
@@ -446,13 +440,12 @@ contract GuarantifyNFTContract is ERC721URIStorage {
         return mSellersByAddress[SellerAddress].allNFTs;
     }
 
-    //récupérer les NFTS en vente d'un vendeur
-    function getAllNFTOnSaleForASeller(
-        address SellerAddress
+    //récupérer tous les NFTS  d'un consommateur
+    function getAllNFTForAConsumer(
+        address ConsumerAddress
     ) external view returns (uint256[] memory) {
-        return mSellersByAddress[SellerAddress].allNFTsOnSale;
+        return mConsumersByAddress[ConsumerAddress].allNFTs;
     }
-
     /*
     function sellNFTToContractMarketplace(
     function buyASecondHandGuarantee(uint256 _tokenId)
