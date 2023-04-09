@@ -8,7 +8,10 @@
 
 ## Guide d'utilisation du MVP
 
-Vous trouverez une vidéo de présentation du projet sur l'URL suivant : [Vidéo de démo](https://)
+Vous trouverez une vidéo de présentation du projet sur l'URL suivant : [Vidéo de la démo](https://www.loom.com/share/59973a85356a473b9399e83ccbbe10b7) + 
+[Vidéo suite de la démo](https://www.loom.com/share/bf5092948cc846ea8b4018b677f1faa7) 
+
+ https://www.loom.com/share/59973a85356a473b9399e83ccbbe10b7/ https://www.loom.com/share/bf5092948cc846ea8b4018b677f1faa7
 
 Il existe une exemple deployé sur le testnet de Polygon, Mumbai ici :
 ```0x12FE08b22168b7F3FC2847aBD85AE8A79f9ECd1b```
